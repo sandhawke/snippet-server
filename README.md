@@ -1,5 +1,6 @@
 # snippet-server
 [![NPM version][npm-image]][npm-url]
+[![Coverage Status](https://coveralls.io/repos/github/sandhawke/snippet-server/badge.svg?branch=master)](https://coveralls.io/github/sandhawke/snippet-server?branch=master)
 
 Very simple way to share text online, like gist or pastebin. With
 simple restful API and pub/sub mechanism.
