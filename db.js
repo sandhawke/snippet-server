@@ -1,3 +1,9 @@
+/*
+  Version 3 an object with key xyz are stored with keys like 'xyz 3'
+
+  At 'xyz' would be '3' if that's the latest version
+*/
+
 const level = require('level')
 const EventEmitter = require('eventemitter3')
 
@@ -11,21 +17,25 @@ async function saveNewObj (post) {
       post.timestamp_ms = Date.parse(post.created_at)
     }
   }
+  post.version = 1
   objs.set(post.id, post)
   events.emit('new', post)
-  await objdb.put(post.id, post)
+  await objdb.put(post.id + ' ' + post.version, post)
+  await objdb.put(post.id, post.version)
 }
 
 async function replaceObj (post) {
   // do something about version history? like save the old version
   // at some new URL?
-  
+
+  post.version = post.version + 1
   objs.set(post.id, post)
-  // events.emit('replace', post)
-  await objdb.put(post.id, post)
+  events.emit('updated', post)
+  await objdb.put(post.id + ' ' + post.version, post)
+  await objdb.put(post.id, post.version)
 }
 
-function startDB () {
+function each (version, versionPointer) {
   return new Promise((resolve, reject) => {
   console.log('reloading saved objs')
   objdb.createReadStream()
@@ -33,7 +43,13 @@ function startDB () {
       // console.log('RELOADED', data.key, '=', data.value)
       // process.stderr.write('.')
       const post = data.value
-      objs.set(post.id, post)
+      if (typeof post === 'object') {
+        version(post)
+      } else {
+        if (versionPointer) {
+          versionPointer(data.key, data.value)
+        }
+      }
     })
     .on('error', function (err) {
       console.log('Oh my!', err)
@@ -48,4 +64,33 @@ function startDB () {
   })
 }
 
-module.exports = { objs, events, saveNewObj, replaceObj, startDB}
+async function startDB () {
+}
+
+async function getVersion (id) {
+  try {
+    const version = await objdb.get(id)
+    if (!version) return undefined
+    return version
+  } catch (e) {
+    if (e.type === 'NotFoundError') return undefined
+    throw e
+  }
+}
+
+async function get (id, version) {
+  try {
+    if (!version) {
+      version = await objdb.get(id)
+      if (!version) return undefined
+    }
+    const obj = await objdb.get(id + ' ' + version)
+    return obj
+  } catch (e) {
+    if (e.type === 'NotFoundError') return undefined
+    throw e
+  }
+}
+
+
+module.exports = { events, saveNewObj, replaceObj, startDB, get, each, getVersion }

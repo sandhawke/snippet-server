@@ -7,10 +7,10 @@ let streamCounter = 0
 const checked = H.safe(' checked="checked"')
   
 const attach = (app) => {
-  app.get('/', (req, res) => {
+  app.get('/', async (req, res) => {
     let text = ''
     if (req.query.id) {
-      const obj = db.objs.get(req.query.id)
+      const obj = await db.get(req.query.id)
       text = obj.text
     }
     res.send(H`<html>
@@ -140,10 +140,11 @@ during create. There is currently no mechanism for token recovery.</p>
     res.redirect(303, '/' + obj.id)
   })
 
-  app.get('/:id', (req, res) => {
+  app.get('/:id', async (req, res) => {
     const id = req.params.id
+    const version = req.query.version
     console.log('looking for %j', id)
-    const post = db.objs.get(id)
+    const post = await db.get(id, version)
     if (!post) {
       console.log('no match')
       res.status(404).send('Not found')
@@ -158,18 +159,76 @@ during create. There is currently no mechanism for token recovery.</p>
       'text/plain': () => {
         res.send(post.text)
       },
-      html: () => {
+      html: async () => {
         res.send(H`<html>
 <head></head><body>
 <div style="border: 1px solid black; padding-left: 1em;">
-<p>This page is user-generated content. This site does not maintain accounts or track user identity. See <a href="/">site home page</a>.</p>
-<p>If you know the bearer token used for creating this page, you can <a href="/?id=${id}&op=replace">edit it</a></p>
+<p>This page, below this box, is user-generated content. This site does not screen content, maintain accounts, or otherwise track user identity. We have no idea who posted this material and have probably not seen it. See <a href="/">site home page</a> for more details and policies.</p>
+<p>If you know the bearer token used for creating this page, you can <a href="/?id=${id}&op=replace">edit it</a>.</p>
+${H.safe(await ver(post, version))}
 </div>
 <pre>${post.text}</pre>
 </body></html>`)
       }
     })
   })
+}
+
+async function verx (post) {
+  const latest = await db.getVersion(post.id)
+  const link = (num) => {
+    return `<a href="?version=${num}">version ${num}</a>`
+  }
+  if (post.version !== latest) {
+    return `<p>This is an old version, version ${post.version}.  
+See ${post.version > 1 ? link(post.version - 1) + ' or': ''} 
+ ${link(post.version + 1)}.
+</p>`
+  } else {
+    if (post.version === 1) {
+      return `<p>This is version 1, the only version of this page.</p>`
+    } else {
+      return `<p>This is the latest version, version ${post.version}.  See <a href="?version=${post.version - 1}">version ${post.version - 1}</a></p>`
+    }
+  }
+}
+
+async function ver (post) {
+  const out = []
+  const latest = await db.getVersion(post.id)
+  const link = (num) => {
+    return `<a href="?version=${num}">${num}</a>`
+  }
+  const vers = () => {
+    const vout = []
+    if (post.version > 11) vout.push('...')
+    for (let x = post.version - 10; x < post.version + 10; x++) {
+      if (x < 1) continue
+      if (x > latest) continue
+      if (x === post.version) {
+        vout.push(`&lt;<b>${x}</b>&gt;`)
+      } else {
+        vout.push(link(x))
+      }
+    }
+    if (latest > post.version + 9) vout.push('...')
+    console.log('vout is %o', vout)
+    return vout.join(' ')
+  }
+
+  out.push(`<p>Versions: ${vers()}</p>`)
+  console.log('out is %o', out)
+  if (post.version !== latest) {
+    out.push(`
+<p>Displaying version ${link(post.version)}. The latest is ${link(latest)}.`)
+  } else {
+    if (post.version === 1) {
+      out.push(`<p>This is version 1, the only version of this page.</p>`)
+    } else {
+      out.push(`<p>This is the latest version, ${post.version}.`)
+    }
+  }
+  return out.join('\n')
 }
 
 module.exports = { attach }

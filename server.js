@@ -11,8 +11,8 @@ const restful = require('./restful')
 const squareQuotes = require('square-quotes')
 const db = require('./db')
 
-// const talkAPI = require('./talkAPI')
-const apis = [ ] // talkAPI ]
+const talkAPI = require('./talkAPI')
+const apis = [ talkAPI ] 
 
 const run = async () => {
   await db.startDB()
@@ -37,6 +37,7 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
     console.log('stream %d open, ws', n)
 
     const conn = new EventEmitter()
+    conn.siteurl = appmgr.siteurl
     conn.send = (first, ...rest) => {
       if (rest.length) throw Error() // best not allow this, I thinkg
       console.log(`stream ${n} snd> %o`, first)

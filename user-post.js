@@ -6,7 +6,7 @@ async function gotUserPost (submitted) {
 
   if (!id) return 'missing id field'
   if (!id.match(/^[0-9a-f]+$/)) return 'id not lowercase hex'
-  let obj = db.objs.get(id)
+  let obj = await db.get(id)
 
   if (op === 'create') {
     if (obj) return 'id already used'
