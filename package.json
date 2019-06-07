@@ -1,8 +1,9 @@
 {
   "name": "snippet-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Very simple way to share text online, like gist or pastebin",
   "main": "index.js",
+  "bin": "server.js",
   "scripts": {
     "test": "npx standard && npx tap --cov test*.js test/*.js"
   },
@@ -20,6 +21,12 @@
   },
   "homepage": "https://github.com/sandhawke/snippet-server#readme",
   "devDependencies": {
+    "form-data": "^2.3.3",
+    "form-urlencoded": "^3.0.0",
+    "got": "^9.6.0",
+    "isomorphic-ws": "^4.0.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7",
     "tape": "^4.9.1"
   },
   "dependencies": {

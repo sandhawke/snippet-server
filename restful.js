@@ -1,12 +1,12 @@
-const db = require('./db')
-const H = require('escape-html-template-tag')   // H.safe( ) if needed
 const { gotUserPost } = require('./user-post')
 
 let streamCounter = 0
 
-const checked = H.safe(' checked="checked"')
-  
-const attach = (app) => {
+const attach = (appmgr, db) => {
+  const H = appmgr.H
+  const checked = H.safe(' checked="checked"')
+  const app = appmgr.app
+
   app.get('/', async (req, res) => {
     let text = ''
     if (req.query.id) {
@@ -131,7 +131,8 @@ during create. There is currently no mechanism for token recovery.</p>
   })
 
   app.post('/', async (req, res) => {
-    const obj = await gotUserPost(req.body)
+    console.log('POST %o', req.body)
+    const obj = await gotUserPost(req.body, db)
     if (typeof obj === 'string') {
       res.status(400).send(obj + '\n')
       return
@@ -172,63 +173,63 @@ ${H.safe(await ver(post, version))}
       }
     })
   })
-}
 
-async function verx (post) {
-  const latest = await db.getVersion(post.id)
-  const link = (num) => {
-    return `<a href="?version=${num}">version ${num}</a>`
-  }
-  if (post.version !== latest) {
-    return `<p>This is an old version, version ${post.version}.  
+  async function verx (post) {
+    const latest = await db.getVersion(post.id)
+    const link = (num) => {
+      return `<a href="?version=${num}">version ${num}</a>`
+    }
+    if (post.version !== latest) {
+      return `<p>This is an old version, version ${post.version}.  
 See ${post.version > 1 ? link(post.version - 1) + ' or': ''} 
  ${link(post.version + 1)}.
 </p>`
-  } else {
-    if (post.version === 1) {
-      return `<p>This is version 1, the only version of this page.</p>`
     } else {
-      return `<p>This is the latest version, version ${post.version}.  See <a href="?version=${post.version - 1}">version ${post.version - 1}</a></p>`
-    }
-  }
-}
-
-async function ver (post) {
-  const out = []
-  const latest = await db.getVersion(post.id)
-  const link = (num) => {
-    return `<a href="?version=${num}">${num}</a>`
-  }
-  const vers = () => {
-    const vout = []
-    if (post.version > 11) vout.push('...')
-    for (let x = post.version - 10; x < post.version + 10; x++) {
-      if (x < 1) continue
-      if (x > latest) continue
-      if (x === post.version) {
-        vout.push(`&lt;<b>${x}</b>&gt;`)
+      if (post.version === 1) {
+        return `<p>This is version 1, the only version of this page.</p>`
       } else {
-        vout.push(link(x))
+        return `<p>This is the latest version, version ${post.version}.  See <a href="?version=${post.version - 1}">version ${post.version - 1}</a></p>`
       }
     }
-    if (latest > post.version + 9) vout.push('...')
-    console.log('vout is %o', vout)
-    return vout.join(' ')
   }
 
-  out.push(`<p>Versions: ${vers()}</p>`)
-  console.log('out is %o', out)
-  if (post.version !== latest) {
-    out.push(`
-<p>Displaying version ${link(post.version)}. The latest is ${link(latest)}.`)
-  } else {
-    if (post.version === 1) {
-      out.push(`<p>This is version 1, the only version of this page.</p>`)
-    } else {
-      out.push(`<p>This is the latest version, ${post.version}.`)
+  async function ver (post) {
+    const out = []
+    const latest = await db.getVersion(post.id)
+    const link = (num) => {
+      return `<a href="?version=${num}">${num}</a>`
     }
+    const vers = () => {
+      const vout = []
+      if (post.version > 11) vout.push('...')
+      for (let x = post.version - 10; x < post.version + 10; x++) {
+        if (x < 1) continue
+        if (x > latest) continue
+        if (x === post.version) {
+          vout.push(`&lt;<b>${x}</b>&gt;`)
+        } else {
+          vout.push(link(x))
+        }
+      }
+      if (latest > post.version + 9) vout.push('...')
+      console.log('vout is %o', vout)
+      return vout.join(' ')
+    }
+
+    out.push(`<p>Versions: ${vers()}</p>`)
+    console.log('out is %o', out)
+    if (post.version !== latest) {
+      out.push(`
+<p>Displaying version ${link(post.version)}. The latest is ${link(latest)}.`)
+    } else {
+      if (post.version === 1) {
+        out.push(`<p>This is version 1, the only version of this page.</p>`)
+      } else {
+        out.push(`<p>This is the latest version, ${post.version}.`)
+      }
+    }
+    return out.join('\n')
   }
-  return out.join('\n')
 }
 
 module.exports = { attach }

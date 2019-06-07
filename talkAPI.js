@@ -1,6 +1,4 @@
-const db = require('./db')
-
-function talk (conn) {
+function talk (conn, db) {
   const url = obj => {
     return conn.siteurl + '/' + obj.id + '?version=' + obj.version
   }
@@ -11,13 +9,13 @@ function talk (conn) {
   conn.onMatch('send all new version URLs', () => {
     conn.log('send all new')
 
-    db.events.on('new', write)
-    db.events.on('updated', write)
+    db.on('new', write)
+    db.on('updated', write)
 
     conn.on('close', () => {
       conn.log('unlistening')
-      db.events.removeListener('new', write)
-      db.events.removeListener('updated', write)
+      db.removeListener('new', write)
+      db.removeListener('updated', write)
     })
   })
 

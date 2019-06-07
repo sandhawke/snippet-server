@@ -1,7 +1,6 @@
 const uuid = require('uuid/v4')
-const db = require('./db')
 
-async function gotUserPost (submitted) {
+async function gotUserPost (submitted, db) {
   const {id, op, text, pw} = submitted
 
   if (!id) return 'missing id field'
