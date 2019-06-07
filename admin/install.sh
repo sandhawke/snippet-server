@@ -58,10 +58,22 @@ if ! node --version; then
     nvm use --lts
 fi
 
-sudo apt-get -y install certbot nginx ufw || exit 1
+if sudo ufw status; then
+    echo skipping certbot and ufw
+else
+    sudo apt-get -y install certbot nginx ufw || exit 1
 
-sudo certbot certonly --agree-tos --eff-email -t -m $EMAIL -d $HOST --standalone --pre-hook 'service nginx stop' --post-hook 'service nginx start' || exit 1
+    sudo certbot certonly --agree-tos --eff-email -t -m $EMAIL -d $HOST --standalone --pre-hook 'service nginx stop' --post-hook 'service nginx start' || exit 1
 
+    sudo ufw enable || exit 1
+    sudo ufw default allow outgoing
+    sudo ufw default deny incoming
+    sudo ufw allow ssh
+    sudo ufw allow http
+    sudo ufw allow https
+    sudo ufw status verbose
+fi
+    
 CONF=/etc/nginx/sites-available/$HOST
 
 if [ ! -d /sites/$HOST ]; then
@@ -88,20 +100,13 @@ else
     exit 1
 fi
 
-sudo ufw enable || exit 1
-sudo ufw default allow outgoing
-sudo ufw default deny incoming
-sudo ufw allow ssh
-sudo ufw allow http
-sudo ufw allow https
-sudo ufw status verbose
-
-npm i -g pm2 || exit 1
+npm i -g pm2
 
 # this is what pm2 says to do
-sudo env PATH=$PATH:$HOME/.nvm/versions/node/v10.16.0/bin $HOME/.nvm/versions/node/v10.16.0/lib/node_modules/pm2/bin/pm2 startup systemd -u sandro --hp $HOME
+#  
+sudo env PATH=$PATH:$HOME/.nvm/versions/node/v10.16.0/bin $HOME/.nvm/versions/node/v10.16.0/lib/node_modules/pm2/bin/pm2 startup systemd -u `whoami` --hp $HOME
 
-pm2 startup || exit 1
+pm2 startup # || exit 1
 
 ################################################################
 ##
@@ -131,5 +136,5 @@ pm2 save
 ################################################################
 
 sudo nginx -t || exit 1
-service nginx restart && echo 'nginx restarted'
+sudo service nginx restart && echo 'nginx restarted'
 
