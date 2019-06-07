@@ -41,19 +41,22 @@ fi
 
 ## Node stuff
 
-sudo apt-get update
-sudo apt-get upgrade -y
-sudo apt-get install -y curl rsync screen build-essential checkinstall git
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
-# make nvm active now
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# best to do this manually beforehand
+#sudo apt-get update
+#sudo apt-get upgrade -y
+#sudo apt-get install -y curl rsync screen build-essential checkinstall git
 
-# we do these as us, NOT SUDO
-nvm install --lts
-nvm use --lts
+if ! node --version; then 
 
-## Web stuff
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+    # make nvm active now
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    
+    # we do these as us, NOT SUDO
+    nvm install --lts
+    nvm use --lts
+fi
 
 sudo apt-get -y install certbot nginx ufw || exit 1
 

@@ -5,7 +5,11 @@ Here's how I set up a server, more or less.
 2. Connect to that machine and check out the code
 
 ```
-export VER=0.1.0
+sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get install -y curl rsync screen build-essential checkinstall git
+
+export VER=0.2.1
 git clone https://github.com/sandhawke/snippet-server.git server-$VER
 cd server-$VER
 git checkout v$VER
