@@ -1,6 +1,6 @@
 {
   "name": "snippet-server",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Very simple way to share text online, like gist or pastebin",
   "main": "index.js",
   "bin": "server.js",
