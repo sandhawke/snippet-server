@@ -10,9 +10,10 @@ const psdad = require('psdad.js')
 const restful = require('./restful')
 const squareQuotes = require('square-quotes')
 const dbmodule = require('./db')
+const debug = require('debug')(__filename.split('/').slice(-1).join())
 
 const talkAPI = require('./talkAPI')
-const apis = [ talkAPI ] 
+const apis = [ talkAPI ]
 
 const run = async (config = {}) => {
   const db = await dbmodule.start(config.dbname || 'pages')
@@ -20,22 +21,22 @@ const run = async (config = {}) => {
   const appmgr = new AppMgr(config)
   appmgr.app.use(cors())
   await appmgr.start()
-  const wss = new WebSocket.Server({ server: appmgr.server });
+  const wss = new WebSocket.Server({ server: appmgr.server })
   console.log(`Try:
 firefox ${appmgr.siteurl}
 wscat -c ${appmgr.siteurl.replace('http', 'ws')}
 `)
 
   appmgr.app.use(bodyParser.json())
-  appmgr.app.use(bodyParser.urlencoded({extended: true}))
+  appmgr.app.use(bodyParser.urlencoded({ extended: true }))
   restful.attach(appmgr, db)
 
   let streamCounter = 0
-  const  conns = []
+  const conns = []
   wss.on('connection', ws => {
     const n = streamCounter++
     const handlers = {}
-    console.log('stream %d open, ws', n)
+    debug('stream %d open, ws', n)
 
     const conn = new EventEmitter()
     conns.push(conn)
@@ -43,14 +44,14 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
     conn.siteurl = appmgr.siteurl
     conn.send = (first, ...rest) => {
       if (rest.length) throw Error() // best not allow this, I thinkg
-      console.log(`stream ${n} snd> %o`, first)
+      debug(`stream ${n} snd> %o`, first)
       ws.send(first)
     }
     conn.addHandlers = additions => {
       Object.assign(handlers, additions)
     }
     conn.log = (first, ...rest) => {
-      console.log(`stream ${n} log: ${first}`, ...rest)
+      debug(`stream ${n} log: ${first}`, ...rest)
     }
 
     const mapper = psdad.mapper()
@@ -60,10 +61,10 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
     conn.onMatch = (texts, func) => {
       for (const text of asArray(texts)) {
         lines.push(text)
-        mapper.addPair({input: func}, text)
+        mapper.addPair({ input: func }, text)
       }
     }
-    
+
     const add = (key, value) => {
       lines.push(value)
       mapper.addPair({
@@ -88,7 +89,7 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
       for (const line of lines) conn.send(' * ' + line)
     }
     conn.send('Connected. Send the message "help" to see implemented statements.')
-    
+
     // make a new mapping from flextags to their handlers for this
     // connection, since the handlers may be different functions (with
     // internal state) for each connection.
@@ -102,9 +103,9 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
     }
 
     for (const api of apis) api.talk(conn, db)
-    
+
     ws.on('message', async (message) => {
-      console.log(`stream ${n} <rcv %o`, message)
+      debug(`stream ${n} <rcv %o`, message)
       if (conn.hijack) {
         // allow a handler to take over the connection and be send the
         // next message
@@ -120,7 +121,7 @@ wscat -c ${appmgr.siteurl.replace('http', 'ws')}
 
     ws.on('close', () => {
       conn.emit('close')
-      console.log('stream %d closed', n)
+      debug('stream %d closed', n)
     })
   })
 
@@ -139,4 +140,3 @@ function asArray (x) {
 }
 
 module.exports = { run }
-

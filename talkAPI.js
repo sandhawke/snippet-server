@@ -21,7 +21,7 @@ function talk (conn, db) {
 
   conn.onMatch('send all URLs', async () => {
     await db.each(obj => {
-        write(obj)
+      write(obj)
     }, (id, ver) => {
       conn.log('latest for %o is %o', id, ver)
     })

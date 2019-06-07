@@ -14,7 +14,7 @@ const start = async (dbname) => {
   async function close () {
     await objdb.close()
   }
-  
+
   async function saveNewObj (post) {
     if (!post.timestamp_ms) {
       if (post.created_at) {
@@ -66,9 +66,6 @@ const start = async (dbname) => {
           resolve()
         })
     })
-  }
-
-  async function startDB () {
   }
 
   async function getVersion (id) {

@@ -1,6 +1,7 @@
 const { gotUserPost } = require('./user-post')
+const debug = require('debug')(__filename.split('/').slice(-1).join())
 
-let streamCounter = 0
+// let streamCounter = 0
 
 const attach = (appmgr, db) => {
   const H = appmgr.H
@@ -131,31 +132,31 @@ during create. There is currently no mechanism for token recovery.</p>
   })
 
   app.post('/', async (req, res) => {
-    console.log('POST %o', req.body)
+    debug('POST %o', req.body)
     const obj = await gotUserPost(req.body, db)
     if (typeof obj === 'string') {
       res.status(400).send(obj + '\n')
       return
     }
-    console.log('created %o', obj)
+    debug('created %o', obj)
     res.redirect(303, '/' + obj.id)
   })
 
   app.get('/:id', async (req, res) => {
     const id = req.params.id
     const version = req.query.version
-    console.log('looking for %j', id)
+    debug('looking for %j', id)
     const post = await db.get(id, version)
     if (!post) {
-      console.log('no match')
+      debug('no match')
       res.status(404).send('Not found')
-      return 
+      return
     }
     if (post.deleted) {
       res.status(410).send('Gone (deleted)')
       return
     }
-    console.log(post)
+    debug(post)
     res.format({
       'text/plain': () => {
         res.send(post.text)
@@ -173,25 +174,6 @@ ${H.safe(await ver(post, version))}
       }
     })
   })
-
-  async function verx (post) {
-    const latest = await db.getVersion(post.id)
-    const link = (num) => {
-      return `<a href="?version=${num}">version ${num}</a>`
-    }
-    if (post.version !== latest) {
-      return `<p>This is an old version, version ${post.version}.  
-See ${post.version > 1 ? link(post.version - 1) + ' or': ''} 
- ${link(post.version + 1)}.
-</p>`
-    } else {
-      if (post.version === 1) {
-        return `<p>This is version 1, the only version of this page.</p>`
-      } else {
-        return `<p>This is the latest version, version ${post.version}.  See <a href="?version=${post.version - 1}">version ${post.version - 1}</a></p>`
-      }
-    }
-  }
 
   async function ver (post) {
     const out = []
@@ -212,12 +194,12 @@ See ${post.version > 1 ? link(post.version - 1) + ' or': ''}
         }
       }
       if (latest > post.version + 9) vout.push('...')
-      console.log('vout is %o', vout)
+      debug('vout is %o', vout)
       return vout.join(' ')
     }
 
     out.push(`<p>Versions: ${vers()}</p>`)
-    console.log('out is %o', out)
+    debug('out is %o', out)
     if (post.version !== latest) {
       out.push(`
 <p>Displaying version ${link(post.version)}. The latest is ${link(latest)}.`)

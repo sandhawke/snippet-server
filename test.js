@@ -5,7 +5,7 @@ const WebSocket = require('isomorphic-ws')
 
 const now = Date.now()
 const run = async () => {
-  const server = await main.run({port: 0, dbname: 'test/_db-' + now})
+  const server = await main.run({ port: 0, dbname: 'test/_db-' + now })
   return server
 }
 test('start and stop', async (t) => {
@@ -47,7 +47,22 @@ test('basic post', async (t) => {
   t.end()
 })
 
-test.only('websocket', async(t) => {
+test('auto-assigned id', async (t) => {
+  const server = await run()
+  const form = {
+    op: 'create',
+    text: 'Hello, World!',
+    pw: 'pw1'
+  }
+  const resp = await request.post(
+    { uri: server.siteurl, form, followAllRedirects: true })
+  t.equal(form.text, resp)
+  await server.stop()
+  t.pass()
+  t.end()
+})
+
+test('websocket', async (t) => {
   const server = await run()
   const ws = new WebSocket(server.siteurl.replace('http', 'ws'))
   const madeURLs = []

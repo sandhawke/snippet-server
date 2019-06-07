@@ -1,9 +1,13 @@
 const uuid = require('uuid/v4')
+const debug = require('debug')(__filename.split('/').slice(-1).join())
 
 async function gotUserPost (submitted, db) {
-  const {id, op, text, pw} = submitted
+  let { id, op, text, pw } = submitted
 
-  if (!id) return 'missing id field'
+  if (!id) {
+    id = uuid().replace(/-/g, '')
+    debug('generated id', id)
+  }
   if (!id.match(/^[0-9a-f]+$/)) return 'id not lowercase hex'
   let obj = await db.get(id)
 
