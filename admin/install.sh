@@ -97,6 +97,10 @@ sudo ufw allow https
 sudo ufw status verbose
 
 npm i -g pm2 || exit 1
+
+# this is what pm2 says to do
+sudo env PATH=$PATH:$HOME/.nvm/versions/node/v10.16.0/bin $HOME/.nvm/versions/node/v10.16.0/lib/node_modules/pm2/bin/pm2 startup systemd -u sandro --hp $HOME
+
 pm2 startup || exit 1
 
 ################################################################
