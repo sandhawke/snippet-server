@@ -1,0 +1,50 @@
+Here's how I set up a server, more or less.
+
+1. Create a Debian 9.7 x64 server. Any Debian-ish server should work.
+
+2. Connect to that machine and check out the code
+
+```
+export VER=0.1.0
+git clone https://github.com/sandhawke/snippet-server.git server-$VER
+cd server-$VER
+git checkout v$VER
+```
+
+3. Maybe customize the install script
+
+4. Or just run it with the right parameters in the environment
+
+EMAIL=sandro@hawke.org HOST=snippet.flextag.org sh install.sh
+
+
+
+
+
+
+```
+sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get install -y curl rsync screen build-essential checkinstall git
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+exit
+
+ssh $IP
+nvm install --lts
+nvm use --lts
+```
+
+4. Check out a version
+
+
+
+
+5. Edit the config variables at the top of install.sh
+
+6. Run the install
+
+```
+sh install.sh
+```
+
+
