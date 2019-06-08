@@ -19,7 +19,7 @@ if [ "$HOST" = "" ]; then
     # (hostname -A is often wrong)
     # and often you want multi-homing, eg for running
     # multiple versions
-    HOST=`hostname -A` 
+    HOST=`hostname -A | tr -d ' '` 
 fi
 
 # set PORT if you don't want it to default based on version numer
@@ -67,15 +67,13 @@ else
 
     sudo ufw enable || exit 1
     sudo ufw default allow outgoing
-    sudo ufw default deny incoming
     sudo ufw allow ssh
     sudo ufw allow http
     sudo ufw allow https
+    sudo ufw default deny incoming
     sudo ufw status verbose
 fi
     
-CONF=/etc/nginx/sites-available/$HOST
-
 if [ ! -d /sites/$HOST ]; then
     sudo mkdir -p /sites/$HOST
 fi
@@ -87,12 +85,13 @@ VER=`node -e "console.log(require('./package').version)"` || exit 1
 VN=`echo $VER | tr -d .`
 PORT=2$VN
 
+CONF=/etc/nginx/sites-available/$HOST
 if [ ! -f $CONF ]; then
     # crazy hack
     sudo touch $CONF
     sudo chown `whoami` $CONF
     # sorry
-    sudo sed -e "s/example.com/$HOST/g" -e "s/6502/$PORT/g" < admin/nginx-config > $CONF
+    sed -e "s/example.com/$HOST/g" -e "s/6502/$PORT/g" < admin/nginx-config > $CONF
     sudo rm -f /etc/nginx/sites-enabled/$HOST
     sudo ln -s /etc/nginx/sites-available/$HOST /etc/nginx/sites-enabled/$HOST
 else
