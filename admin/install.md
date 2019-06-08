@@ -8,7 +8,7 @@ Here's how I set up a server, more or less.
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y curl rsync screen build-essential checkinstall git
 
-export VER=0.2.4
+export VER=0.2.3
 git clone https://github.com/sandhawke/snippet-server.git server-$VER
 cd server-$VER
 git checkout v$VER
@@ -17,5 +17,13 @@ git checkout v$VER
 3. Maybe customize the install script, or set parameters
 
 ```           
-EMAIL=sandro@hawke.org HOST=snippet.flextag.org sh admin/install.sh
+EMAIL=sandro@example.com HOST=snippet.flextag.org sh admin/install.sh
 ```
+
+If prompted:
+
+```
+Command may disrupt existing ssh connections. Proceed with operation (y|n)? y
+```
+
+it's okay to say 'y'.
