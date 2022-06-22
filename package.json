@@ -23,7 +23,7 @@
   "devDependencies": {
     "form-data": "^2.3.3",
     "form-urlencoded": "^3.0.0",
-    "got": "^9.6.0",
+    "got": "^11.8.5",
     "isomorphic-ws": "^4.0.1",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
